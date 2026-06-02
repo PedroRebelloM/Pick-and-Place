@@ -23,17 +23,15 @@ This project aims to develop an automated pick-and-place system that:
 
 ### Hardware Components
 - CNC Motion Control System (X, Y, Z axes)
-- Robotic arm or linear actuator for pick-and-place operations
+- Eletromagnet
 - Computer vision camera system
-- Lighting system for optimal image capture
-- Conveyor or staging area for input materials
 - Sorting bins/containers for classified components
 
 ### Software Components
-- Machine vision algorithm (object detection & classification)
-- Motion control firmware
-- Real-time data processing pipeline
-- UI/Dashboard for monitoring and configuration
+- Machine vision algorithm (object detection & classification) (Raspbarry py with Open CV)
+- Motion control firmware (Arduino)
+- Real-time web data processing (Serial + Flask) 
+- UI/Dashboard for monitoring and configuration (Flask)
 
 ## 🚀 Getting Started
 
@@ -97,15 +95,6 @@ Pick-and-Place/
 - [Configuration Guide](docs/configuration.md)
 - [API Reference](docs/api.md)
 
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## 📝 License
 
