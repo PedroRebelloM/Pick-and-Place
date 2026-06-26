@@ -63,10 +63,10 @@ class ScrewDetector:
             if 3000 > area > 500: 
                 x, y, w, h = cv2.boundingRect(contorno)
                 
-                cx = x + (w / 2)
-                cy = y + (h / 2)
+                cx = x + (w / 2) #centro em x
+                cy = y + (h / 2) #centro em y
                 
-                if (zx1 <= cx <= zx2) and (zy1 <= cy <= zy2):
+                if (zx1 <= cx <= zx2) and (zy1 <= cy <= zy2): 
                     continue
                     
                 # calcula um retangulo justinho que inclina junto com a rotacao do objeto
@@ -74,9 +74,6 @@ class ScrewDetector:
                 rect = cv2.minAreaRect(hull)
                 dimensoes = rect[1]
                 
-                if len(dimensoes) < 2 or dimensoes[0] == 0 or dimensoes[1] == 0:
-                    continue
-                    
                 comprimento = max(dimensoes)
                 espessura = min(dimensoes)
                 
@@ -102,6 +99,7 @@ class ScrewDetector:
         # inicializa o contador com zero para montar os dados finais desse momento do video
         contagem = {"M2": 0, "M3": 0, "M4": 0, "Desc.": 0, "Porcas": len(dadosPorcas)}
         espessuras = []
+        alvos = []
 
         # encontra o contorno e desenha a marcacao das porcas
         for p in dadosPorcas:
@@ -109,6 +107,12 @@ class ScrewDetector:
             box = np.intp(box)  
             cv2.drawContours(frameContornos, [box], 0, (255, 0, 0), 2) # pinta as porcas de azul
             bx, by, bw, bh = p['bbox']
+            
+            # adiciona a porca na lista de alvos validos
+            cx = bx + (bw / 2)
+            cy = by + (bh / 2)
+            alvos.append({"classe": "Porca", "cx": cx, "cy": cy})
+            
             cv2.putText(frameContornos, "Porca", (bx, by - 5), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
@@ -147,6 +151,13 @@ class ScrewDetector:
                 cv2.drawContours(frameContornos, [box], 0, (0, 255, 0), 2)                
                 
                 bx, by, bw, bh = p['bbox']
+
+                
+                # adiciona o parafuso na lista de alvos validos
+                cx = bx + (bw / 2)
+                cy = by + (bh / 2)
+                alvos.append({"classe": classe, "cx": cx, "cy": cy})
+                
                 cv2.putText(frameContornos, f"{classe} (e={p['espessura']:.1f})", (bx, by - 5), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                         
@@ -173,7 +184,7 @@ class ScrewDetector:
             "espessura_media": avg_e
         }
 
-        return True, dadosBase64, stats
+        return True, dadosBase64, stats, alvos
 
     def release(self):
         """libera a camera ao finalizar o uso"""

@@ -2,10 +2,11 @@ import asyncio
 import time
 import flet as ft
 import serial
+import serial.tools.list_ports
 from classe import ScrewDetector
 
 try:
-    arduino = serial.Serial('COM3', 9600, timeout=1)
+    arduino = serial.Serial('COM4', 9600, timeout=1)
 except Exception as e:
     print("Arduino não conectado!")
     arduino = None
@@ -35,47 +36,103 @@ async def main(page: ft.Page):
     if detector.is_opened():
         statusText.value = "Sistema pronto"
     else:
-        statusText.value = "Erro fatal: Câmera no ID 0 não respondeu."
+        statusText.value = "Erro"
         statusText.color = ft.Colors.RED_400
 
     # guarda os dados da operacao
-    state = {
+    estado = {
         "running": False,
         "comecar_time": None,
-        "elapsed_paused": 0.0
+        "tempo_parado": 0.0
     }
 
     time_text = ft.Text("Tempo: 00:00:00", size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.YELLOW_400)
 
     # funcao executada ao clicar no botao comecar
     def btn_comecar_click(e):
-        if not state["running"]:
-            state["running"] = True
-            state["comecar_time"] = time.time()
-            statusText.value = "Sistema OPERANDO"
+        if not estado["running"]:
+            estado["running"] = True
+            estado["comecar_time"] = time.time()
+            statusText.value = "Sistema operando"
             statusText.color = ft.Colors.GREEN_400
             statusText.update()
             
             if arduino is not None:
                 arduino.write("COMEÇAR\n".encode("utf-8"))
+
+    def btn_descer_click(e):
+        if arduino is not None:
+            arduino.write("DESCER\n".encode("utf-8"))
+
+    def btn_subir_click(e):
+        if arduino is not None:
+            arduino.write("SUBIR\n".encode("utf-8"))
+
+    def btn_magnetizar_click(e):
+        if arduino is not None:
+            arduino.write("MAGNETIZAR\n".encode("utf-8"))
+
+    def btn_desmagnetizar_click(e):
+        if arduino is not None:
+            arduino.write("DESMAGNETIZAR\n".encode("utf-8"))
+            
             
     # funcao executada ao clicar no botao pausar
     def btn_pause_click(e):
-        if state["running"]:
-            state["running"] = False
-            state["elapsed_paused"] += time.time() - state["comecar_time"]
+        if estado["running"]:
+            estado["running"] = False
+            estado["tempo_parado"] += time.time() - estado["comecar_time"]
             statusText.value = "Sistema PAUSADO"
             statusText.color = ft.Colors.ORANGE_400
             statusText.update()
             
             if arduino is not None:
-                arduino.write("PAUSAR\n".encode("utf-8"))
+                arduino.write("STOP\n".encode("utf-8"))
+
+    def btn_home_click(e):
+        if arduino is not None:
+            print("HOME")
+            arduino.write(b'HOME\n')
+        else:
+            print("Erro home")
+
+    def btn_mover_click(e):
+        if arduino is not None:
+            x_val = input_x.value if input_x.value else "0"
+            y_val = input_y.value if input_y.value else "0"
+            comando = f"MOVE X{x_val} Y{y_val}\n"
+            
+            print(f"Python enviou: {comando.strip()}")
+            arduino.write(comando.encode("utf-8"))
+        else:
+            print("Erro mover_click")
 
     # desenha os botoes na interface
     btn_comecar = ft.ElevatedButton("Começar", icon="play_arrow", on_click=btn_comecar_click, bgcolor=ft.Colors.GREEN_700, color=ft.Colors.WHITE)
     btn_pause = ft.ElevatedButton("Pausar", icon="pause", on_click=btn_pause_click, bgcolor=ft.Colors.ORANGE_700, color=ft.Colors.WHITE)
     
-    controls_row = ft.Row([btn_comecar, btn_pause], alignment=ft.MainAxisAlignment.CENTER)
+    btn_descer = ft.ElevatedButton("Descer", icon="arrow_downward", on_click=btn_descer_click, bgcolor=ft.Colors.BLUE_700, color=ft.Colors.WHITE)
+    btn_subir = ft.ElevatedButton("Subir", icon="arrow_upward", on_click=btn_subir_click, bgcolor=ft.Colors.PURPLE_700, color=ft.Colors.WHITE)
+    
+    btn_magnetizar = ft.ElevatedButton("Ímã ON", icon="bolt", on_click=btn_magnetizar_click, bgcolor=ft.Colors.RED_700, color=ft.Colors.WHITE)
+    btn_desmagnetizar = ft.ElevatedButton("Ímã OFF", icon="power_off", on_click=btn_desmagnetizar_click, bgcolor=ft.Colors.BROWN_700, color=ft.Colors.WHITE)
+
+    btn_home = ft.ElevatedButton("Homing", icon="home", on_click=btn_home_click, bgcolor=ft.Colors.BROWN_700, color=ft.Colors.WHITE)
+
+    # campos de texto para movimentacao manual
+    input_x = ft.TextField(label="X", width=80, height=40, text_size=14, keyboard_type=ft.KeyboardType.NUMBER)
+    input_y = ft.TextField(label="Y", width=80, height=40, text_size=14, keyboard_type=ft.KeyboardType.NUMBER)
+    btn_mover = ft.ElevatedButton("Mover", icon="open_with", on_click=btn_mover_click, bgcolor=ft.Colors.TEAL_700, color=ft.Colors.WHITE)
+
+    # agrupa de dois em dois
+    controls_grid = ft.Column([
+        ft.Row([btn_comecar, btn_pause], alignment=ft.MainAxisAlignment.CENTER),
+        ft.Row([btn_descer, btn_subir], alignment=ft.MainAxisAlignment.CENTER),
+        ft.Row([btn_magnetizar, btn_desmagnetizar], alignment=ft.MainAxisAlignment.CENTER),
+        ft.Row([btn_home], alignment=ft.MainAxisAlignment.CENTER),
+        ft.Divider(color=ft.Colors.WHITE24),
+        ft.Row([input_x, input_y, btn_mover], alignment=ft.MainAxisAlignment.CENTER)
+    ], spacing=10)
 
     # inicializa textos de estatisticas
     count_m2_text = ft.Text("M2: 0", size=18, color=ft.Colors.GREEN_400, weight=ft.FontWeight.W_500)
@@ -85,6 +142,9 @@ async def main(page: ft.Page):
     count_desc_text = ft.Text("Outros: 0", size=18, color=ft.Colors.GREY_400, weight=ft.FontWeight.W_500)
     total_text = ft.Text("Total: 0", size=22, weight=ft.FontWeight.BOLD)
 
+    # agrupa os textos em linhas para poupar espaco vertical
+    parafusos_row = ft.Row([count_m2_text, count_m3_text, count_m4_text], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+    outros_row = ft.Row([count_porcas_text, count_desc_text], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
     # constroi as caixas de selecao de filtros
     chk_m2 = ft.Checkbox(label="M2", value=True)
     chk_m3 = ft.Checkbox(label="M3", value=True)
@@ -96,10 +156,9 @@ async def main(page: ft.Page):
         chk_m3.visible = chk_parafusos.value
         chk_m4.visible = chk_parafusos.value
         page.update()
-
+        
     chk_parafusos = ft.Checkbox(label="Parafusos", value=True, on_change=on_parafusos_change)
     chk_porcas = ft.Checkbox(label="Porcas", value=True)
-
     filtros_container = ft.Container(
         content=ft.Column([
             ft.Text("Filtros de Detecção", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
@@ -108,7 +167,6 @@ async def main(page: ft.Page):
             ft.Row([chk_m2, chk_m3, chk_m4], alignment=ft.MainAxisAlignment.START)
         ], spacing=2)
     )
-
     # monta o retangulo de dados na tela
     info_panel = ft.Container(
         content=ft.Column(
@@ -117,24 +175,21 @@ async def main(page: ft.Page):
                 ft.Divider(color=ft.Colors.WHITE24),
                 total_text,
                 ft.Container(height=5),
-                count_m2_text,
-                count_m3_text,
-                count_m4_text,
-                count_porcas_text,
-                count_desc_text,
+                parafusos_row,    
+                outros_row,       
                 ft.Divider(color=ft.Colors.WHITE24),
                 filtros_container,
                 ft.Divider(color=ft.Colors.WHITE24),
                 time_text,
-                controls_row
+                controls_grid
             ],
             spacing=5
         ),
         padding=25,
         bgcolor=ft.Colors.SURFACE_CONTAINER_HIGHEST,
         border_radius=12,
-        width=300,
-        height=580,
+        width=350,
+        height=720,
         alignment=ft.Alignment.TOP_LEFT
     )
 
@@ -162,6 +217,15 @@ async def main(page: ft.Page):
         )
     )
 
+    # parametros de calibracao da cnc (mapeamento camera -> real)
+    #24.3 altura
+    escala_x_mm_por_pixel = 0.5 
+    escala_y_mm_por_pixel = 0.5 
+    offset_x_mm = 100.0
+    offset_y_mm = 50.0
+    # variavel de controle para a maquina nao pegar o mesmo parafuso duas vezes
+    alvos_enviados = []
+
     # loop principal infinito que roda em paralelo com a tela (async)
     async def loop_video():
         while True:
@@ -176,7 +240,7 @@ async def main(page: ft.Page):
                 }
             
                 # processamento da imagem ao vivo da camera
-                retorno, dadosBase64, stats = detector.process_frame(filters=filtros_atuais)
+                retorno, dadosBase64, stats, alvos = detector.process_frame(filters=filtros_atuais)
                 
                 if not retorno:
                     await asyncio.sleep(0.01)
@@ -187,9 +251,9 @@ async def main(page: ft.Page):
                 videoFrame.update()
 
                 # executa atualizacao de numeros se estiver operando
-                if state["running"]:
+                if estado["running"]:
                     # converte o tempo para formato de horas e minutos
-                    current_elapsed = state["elapsed_paused"] + (time.time() - state["comecar_time"])
+                    current_elapsed = estado["tempo_parado"] + (time.time() - estado["comecar_time"])
                     horas, resto = divmod(int(current_elapsed), 3600)
                     minutos, segundos = divmod(resto, 60)
                     novo_tempo = f"Tempo: {horas:02d}:{minutos:02d}:{segundos:02d}"
@@ -227,6 +291,31 @@ async def main(page: ft.Page):
                     if total_text.value != new_total:
                         total_text.value = new_total
                         total_text.update()
+
+                    if arduino is not None and len(alvos) > 0:
+                        for alvo in alvos:
+                            # cria um id unico baseado na posicao grosseira para nao mandar o mesmo alvo duas vezes
+                            alvo_id = f"{alvo['classe']}_{int(alvo['cx'])}_{int(alvo['cy'])}"
+                            
+                            if alvo_id not in alvos_enviados:
+                                # converte as coordenadas de pixels (camera) para milimetros (mesa cnc)
+                                pos_x_real = offset_x_mm + (alvo["cx"] * escala_x_mm_por_pixel)
+                                pos_y_real = offset_y_mm + (alvo["cy"] * escala_y_mm_por_pixel)
+                                
+                                # monta o comando que o arduino vai entender(i nclui classe para talvez caixas diferentes)
+                                # PEGAR M4 = vai para x,y -> desce servo -> liga rele -> sobe servo -> vai pra caixa M4 -> desliga rele
+                                comando = f"PEGAR,{alvo['classe']},{pos_x_real:.1f},{pos_y_real:.1f}\n"
+                                #PEGAR,m4,x,y
+                                # envia o comando pela porta serial (descomente quando for ligar a maquina)
+                                # arduino.write(comando.encode("utf-8"))
+                                
+                                # salva na lista de concluidos
+                                alvos_enviados.append(alvo_id)
+                                print(f"Comando preparado: {comando.strip()}")
+                                
+                                # pausa de seguranca entre um envio e outro para o arduino nao engasgar
+                                # na pratica, o ideal e ler um "OK" do arduino antes de enviar o proximo!
+                                await asyncio.sleep(0.5)
 
                 await asyncio.sleep(0.03)
 
