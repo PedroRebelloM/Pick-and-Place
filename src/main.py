@@ -307,7 +307,7 @@ async def main(page: ft.Page):
                                 comando = f"PEGAR,{alvo['classe']},{pos_x_real:.1f},{pos_y_real:.1f}\n"
                                 #PEGAR,m4,x,y
                                 # envia o comando pela porta serial (descomente quando for ligar a maquina)
-                                # arduino.write(comando.encode("utf-8"))
+                                arduino.write(comando.encode("utf-8"))
                                 
                                 # salva na lista de concluidos
                                 alvos_enviados.append(alvo_id)
