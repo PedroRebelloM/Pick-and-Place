@@ -26,6 +26,12 @@
 //#define MOTOR_A_STEP 12
 //#define MOTOR_A_DIR 13
 
+// Parâmetros do movimento ondulatório - ajuste conforme a bancada/curso da CNC
+#define AMPLITUDE_ONDA 50           // amplitude do "vai e vem" no eixo Y (em passos)
+#define COMPRIMENTO_PERCURSO_X 800  // distância total a percorrer no eixo X (em passos)
+#define PASSO_X 20                  // incremento de X entre cada ponto calculado da onda
+#define PERIODO_ONDA 200            // "período" da senoide em passos de X (controla a frequência das ondulações)
+
 Servo motor_ima;
 
 int POS_X = 0;
@@ -156,6 +162,10 @@ void loop() {
       if (comando.substring(4) == "DESLIGA"){
         digitalWrite(RELE_IMA, LOW); 
       }
+      else
+      if (comando.startsWith("ESPALHA")){
+        espalha_parafusos();
+      }
     }
     else{
       Serial.print("Comando inválido!");  
@@ -239,3 +249,61 @@ void retorno_inicio () {
 
   digitalWrite(EN_PIN, HIGH);
 } // retorno_inicio
+
+
+void espalha_parafusos() {
+  Serial.println("Iniciando espalhamento de parafusos...");
+
+  // Garante que o imã esteja DESATIVADO, para não prender os parafusos durante o movimento
+  digitalWrite(RELE_IMA, LOW);
+
+  // Move o servo do imã para baixo (mesmo padrão usado em IMA DESCE)
+  for (int angulo = motor_ima.read(); angulo <= 180; angulo++) {
+    motor_ima.write(angulo);
+    delay(15);
+  }
+
+  // Habilita os drivers dos motores
+  digitalWrite(EN_PIN, LOW);
+
+  motor_x.setMaxSpeed(velocidade);
+  motor_x.setAcceleration(aceleracao);
+  motor_y.setMaxSpeed(velocidade);
+  motor_y.setAcceleration(aceleracao);
+
+  long posX_inicial = motor_x.currentPosition();
+  long posY_inicial = motor_y.currentPosition();
+
+  // Percorre o eixo X em pequenos passos, calculando Y = amplitude * sen(x)
+  for (long x = 0; x <= COMPRIMENTO_PERCURSO_X; x += PASSO_X) {
+
+    // Permite interromper o movimento enviando STOP durante a execução
+    if (Serial.available() > 0) {
+      String comando_stop = Serial.readStringUntil('\n');
+      if (comando_stop.startsWith("STOP")) {
+        Serial.println("Espalhamento interrompido!");
+        digitalWrite(EN_PIN, HIGH);
+        return;
+      }
+    }
+
+    float angulo_rad = (2.0 * PI * x) / PERIODO_ONDA;
+    long y = (long)(AMPLITUDE_ONDA * sin(angulo_rad));
+
+    motor_x.moveTo(posX_inicial + x);
+    motor_y.moveTo(posY_inicial + y);
+
+    // Roda os dois motores até alcançarem o ponto calculado
+    while (motor_x.distanceToGo() != 0 || motor_y.distanceToGo() != 0) {
+      motor_x.run();
+      motor_y.run();
+    }
+  }
+
+  Serial.println("Espalhamento de parafusos concluído!");
+
+  // Mantém POS_X / POS_Y coerentes com o restante do código
+  POS_X = motor_x.currentPosition();
+  POS_Y = motor_y.currentPosition();
+
+} // espalha_parafusos
