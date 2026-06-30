@@ -299,7 +299,11 @@ void espalha_parafusos() {
       motor_y.run();
     }
   }
-
+  // Levanta o servo
+  for (int angulo = 180; angulo >= SERVO_POS_INI; angulo--) {
+    motor_ima.write(angulo);
+    delay(15);
+  }
   Serial.println("Espalhamento de parafusos concluído!");
 
   // Mantém POS_X / POS_Y coerentes com o restante do código
