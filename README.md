@@ -69,10 +69,6 @@ meu-projeto-cnc/
 │   ├── stl_parts/              # Peças impressas em 3D para a máquina
 │   └── wiring_diagram.pdf      # Diagrama de ligação da CNC Shield
 │
-├── docs/                       # Documentação detalhada
-│   ├── setup_hardware.md       # Como ligar os cabos, motores e fontes
-│   └── setup_software.md       # Como instalar as bibliotecas do Python e Arduino
-│
 └── README.md                   # Este arquivo
 ```
 
