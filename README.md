@@ -1,6 +1,3 @@
-
-Biblioteca AccelStepper.h
-https://github.com/adafruit/AccelStepper/blob/master/AccelStepper.h#L154
 # Máquina CNC Pick-and-Place (Separação Automática)
 
 Uma máquina CNC (Controle Numérico Computadorizado) projetada para separar e organizar automaticamente parafusos e porcas de acordo com seus tipos, utilizando visão computacional e precisão robótica.
