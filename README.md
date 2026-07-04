@@ -79,7 +79,7 @@ meu-projeto-cnc/
 ## 🚀 Como Começar
 
 Pré-requisitos
-- Arduino IDE instalado para compilar o firmware.
+- [Arduino IDE](https://docs.arduino.cc/software/ide/) instalado para compilar o firmware.
 - Python 3.x instalado.
 - Bibliotecas Python: opencv-python, pyserial, flask.
 
