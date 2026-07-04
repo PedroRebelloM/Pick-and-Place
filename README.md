@@ -1,95 +1,97 @@
 
 Biblioteca AccelStepper.h
 https://github.com/adafruit/AccelStepper/blob/master/AccelStepper.h#L154
-# Pick-and-Place CNC Machine
+# Máquina CNC Pick-and-Place (Separação Automática)
 
-A Computer Numeric Control (CNC) machine designed to automatically sort and organize screws and nuts by their types using machine vision and precision robotics.
+Uma máquina CNC (Controle Numérico Computadorizado) projetada para separar e organizar automaticamente parafusos e porcas de acordo com seus tipos, utilizando visão computacional e precisão robótica.
 
-## 🎯 Project Overview
+## 🎯 Visão Geral do Projeto
 
-This project aims to develop an automated pick-and-place system that:
-- **Identifies** different types of screws and nuts using computer vision
-- **Classifies** fasteners by their characteristics (size, type, thread pattern)
-- **Sorts** components into designated bins or containers
-- **Optimizes** pick-and-place movements for speed and accuracy
+Este projeto visa desenvolver um sistema automatizado de *pick-and-place* (pegar e colocar) que:
+- **Identifica** diferentes tipos de parafusos e porcas usando visão computacional.
+- **Classifica** os fixadores por suas características (tamanho, tipo, formato).
+- **Separa e Organiza** os componentes em recipientes ou compartimentos designados.
+- **Otimiza** os movimentos de deslocamento e captura (eixos X e Y) para maior velocidade e precisão.
 
-## 📋 Features
+## 📋 Funcionalidades (Roadmap)
 
-- [ ] Computer vision system for fastener detection and classification
-- [ ] Robotic arm for precise picking and placement
-- [ ] CNC motion control system
-- [ ] Real-time sorting and organization
-- [ ] Customizable classification rules
-- [ ] Performance monitoring and statistics
+- [ ] Sistema de visão computacional para detecção e classificação de peças.
+- [ ] Atuador magnético (Eletroímã controlado por Servo Motor) para captura precisa.
+- [ ] Sistema de controle de movimento CNC (Arduino + CNC Shield).
+- [ ] Separação e organização em tempo real.
+- [ ] Regras de classificação personalizáveis.
+- [ ] Interface de usuário (Dashboard) para monitoramento de estatísticas.
 
-## 🏗️ System Architecture
+## 🏗️ Arquitetura do Sistema
 
-### Hardware Components
-- CNC Motion Control System (X, Y, Z axes)
-- Eletromagnet
-- Computer vision camera system
-- Sorting bins/containers for classified components
+### Componentes de Hardware
+- Sistema de Movimento CNC:
+  - 1 Arduino Uno
+  - 1 CNC Shield V3.0
+  - 3 Módulos de Driver A4988
+  - 3 Motores NEMA 17
+- Ferramenta de Captura:
+  - Eletroímã
+  - Servo Motor MG90S
+  - Módulo Relé 
+- Câmera para visão computacional.
+- Recipientes de separação para os componentes classificados.
 
-### Software Components
-- Machine vision algorithm (object detection & classification) (Raspbarry py with Open CV)
-- Motion control firmware (Arduino)
-- Real-time web data processing (Serial + Flask) 
-- UI/Dashboard for monitoring and configuration (Flask)
+![Circuito CNC](https://github.com/PedroRebelloM/Pick-and-Place/blob/e6c53de7f7e20458a12f1c13ce07474f8cb05818/img/Circuito.png)
 
-## 🚀 Getting Started
+### Componentes de Software
+- **Visão Computacional:** Algoritmo de detecção e classificação (Raspberry Pi / PC com Python e OpenCV).
+- **Firmware de Controle de Movimento:** Lógica em C++ utilizando a [Biblioteca AccelStepper](https://github.com/adafruit/AccelStepper/blob/master/AccelStepper.h#L154) (Arduino).
+- **Comunicação e Backend:** Processamento de dados em tempo real via porta Serial e servidor web (Python + Flask).
+- **Interface/Dashboard:** UI para monitoramento e configuração da máquina (Web/Flask).
 
-### Prerequisites
-- [List hardware requirements]
-- [List software dependencies]
+---
 
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/PedroRebelloM/Pick-and-Place.git
+## 📁 Estrutura de Diretórios Sugerida
 
-# Navigate to project directory
-cd Pick-and-Place
+Para manter o projeto organizado, sugerimos a seguinte estrutura de pastas:
 
-# Install dependencies
-[Installation instructions]
+```text
+meu-projeto-cnc/
+│
+├── arduino/                    # Códigos fonte em C++ (Firmware)
+│   ├── main/                   # Arquivo principal (.ino)
+│   └── funcoes/                # Arquivos auxiliares (homing, espalhar_parafusos, etc.)
+│
+├── computer_vision/            # Scripts Python para detecção de imagem
+│   ├── detect_fasteners.py     # Algoritmo principal do OpenCV
+│   └── models/                 # Modelos de Machine Learning (se houver)
+│
+├── backend/                    # Servidor web e comunicação Serial
+│   ├── app.py                  # Servidor Flask
+│   ├── serial_com.py           # Script para enviar comandos (MOVE, STOP) para o Arduino
+│   ├── templates/              # Páginas HTML do Dashboard
+│   └── static/                 # Arquivos CSS e JavaScript do Dashboard
+│
+├── hardware/                   # Modelos 3D (STL) e Esquemas Eletrônicos
+│   ├── stl_parts/              # Peças impressas em 3D para a máquina
+│   └── wiring_diagram.pdf      # Diagrama de ligação da CNC Shield
+│
+├── docs/                       # Documentação detalhada
+│   ├── setup_hardware.md       # Como ligar os cabos, motores e fontes
+│   └── setup_software.md       # Como instalar as bibliotecas do Python e Arduino
+│
+└── README.md                   # Este arquivo
 ```
 
-### Quick Start
-```bash
-# Run the system
-[Execution command]
-```
+## 🚀 Como Começar
 
-## 📁 Project Structure
+Pré-requisitos
+- Arduino IDE instalado para compilar o firmware.
+- Python 3.x instalado.
+- Bibliotecas Python: opencv-python, pyserial, flask.
 
-```
-Pick-and-Place/
-├── firmware/           # CNC control firmware
-├── vision/             # Computer vision algorithms
-├── motion/             # Motion control system
-├── hardware/           # Hardware schematics and designs
-├── ui/                 # User interface/dashboard
-├── docs/               # Documentation
-└── tests/              # Test suite
-```
-
-## 🔍 How It Works
-
-1. **Input**: Raw mix of screws and nuts fed into the system
-2. **Detection**: Computer vision identifies each component
-3. **Classification**: Machine learning model classifies by type
-4. **Picking**: Robotic arm picks the classified component
-5. **Placement**: Component is placed in its designated bin
-6. **Repeat**: Process continues automatically
-
-## 🛠️ Development Status
-
-- [ ] System design and CAD models
-- [ ] Hardware assembly
-- [ ] Vision system development
-- [ ] Motion control implementation
-- [ ] Integration and testing
-- [ ] Performance optimization
+Instalação e Execução (Resumo)
+Faça o upload dos arquivos da pasta arduino/ para o seu Arduino Uno.
+Certifique-se de que a CNC Shield está devidamente alimentada.
+No terminal, navegue até a pasta backend/ e instale as dependências: pip install -r requirements.txt.
+Inicie o servidor Flask: python app.py.
+Acesse o Dashboard pelo seu navegador para controlar a máquina.
 
 ## 📚 Documentation
 
@@ -99,19 +101,22 @@ Pick-and-Place/
 - [API Reference](docs/api.md)
 
 
-## 📝 License
+## 📝 Licença
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👤 Author
 
-**Pedro Rebello M**
-- GitHub: [@PedroRebelloM](https://github.com/PedroRebelloM)
+## 👤 Autores
 
-## 📞 Contact & Support
+- **Cris Guimarães**
 
-For questions or support regarding this project, please open an issue on the GitHub repository.
+- **Pedro Rebello M**
+
+- **Pedro Ribeiro**
+
+
+## 📞 Suporte e Contato
+
 
 ---
 
-**Status**: Under Development 🚧
+**Status**: Em desenvolvimento 🚧
