@@ -52,8 +52,8 @@ Para manter o projeto organizado, sugerimos a seguinte estrutura de pastas:
 meu-projeto-cnc/
 │
 ├── arduino/                    # Códigos fonte em C++ (Firmware)
-│   ├── main/                   # Arquivo principal (.ino)
-│   └── funcoes/                # Arquivos auxiliares (homing, espalhar_parafusos, etc.)
+│   ├── arduino/                # Arquivo principal (.ino)
+│   └── funcoes/                # Arquivo contendo funções auxiliares (homing, espalhar_parafusos, etc.)
 │
 ├── computer_vision/            # Scripts Python para detecção de imagem
 │   ├── detect_fasteners.py     # Algoritmo principal do OpenCV
