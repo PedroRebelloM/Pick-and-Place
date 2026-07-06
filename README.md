@@ -76,7 +76,7 @@ meu-projeto-cnc/
 
 Pré-requisitos
 - [Arduino IDE](https://docs.arduino.cc/software/ide/) instalado para compilar o firmware.
-- Python 3.x instalado.
+- Python 3.12.10 instalado.
 - Bibliotecas Python: opencv-python, pyserial, flask.
 
 Instalação e Execução (Resumo)
@@ -86,16 +86,8 @@ No terminal, navegue até a pasta backend/ e instale as dependências: pip insta
 Inicie o servidor Flask: python app.py.
 Acesse o Dashboard pelo seu navegador para controlar a máquina.
 
-## 📚 Documentation
-
-- [Hardware Setup Guide](docs/hardware-setup.md)
-- [Software Installation](docs/software-setup.md)
-- [Configuration Guide](docs/configuration.md)
-- [API Reference](docs/api.md)
-
 
 ## 📝 Licença
-
 
 
 ## 👤 Autores
