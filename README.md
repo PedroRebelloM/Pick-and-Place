@@ -39,37 +39,30 @@ Este projeto visa desenvolver um sistema automatizado de *pick-and-place* (pegar
 ### Componentes de Software
 - **Visão Computacional:** Algoritmo de detecção e classificação (Raspberry Pi / PC com Python e OpenCV).
 - **Firmware de Controle de Movimento:** Lógica em C++ utilizando a [Biblioteca AccelStepper](https://github.com/adafruit/AccelStepper/blob/master/AccelStepper.h#L154) (Arduino).
-- **Comunicação e Backend:** Processamento de dados em tempo real via porta Serial e servidor web (Python + Flask).
+- **Comunicação e Backend:** Processamento de dados em tempo real via porta Serial e servidor web (Python + flet).
 - **Interface/Dashboard:** UI para monitoramento e configuração da máquina (Web/Flask).
 
 ---
 
-## 📁 Estrutura de Diretórios Sugerida
+## 📁 Estrutura de Diretórios
 
-Para manter o projeto organizado, sugerimos a seguinte estrutura de pastas:
+A estrutura atual do repositório é a seguinte:
 
 ```text
-meu-projeto-cnc/
-│
-├── arduino/                    # Códigos fonte em C++ (Firmware)
-│   ├── arduino/                # Arquivo principal (.ino)
-│   └── funcoes/                # Arquivo contendo funções auxiliares (homing, espalhar_parafusos, etc.)
-│
-├── computer_vision/            # Scripts Python para detecção de imagem
-│   ├── detect_fasteners.py     # Algoritmo principal do OpenCV
-│   └── models/                 # Modelos de Machine Learning (se houver)
-│
-├── backend/                    # Servidor web e comunicação Serial
-│   ├── app.py                  # Servidor Flask
-│   ├── serial_com.py           # Script para enviar comandos (MOVE, STOP) para o Arduino
-│   ├── templates/              # Páginas HTML do Dashboard
-│   └── static/                 # Arquivos CSS e JavaScript do Dashboard
-│
-├── hardware/                   # Modelos 3D (STL) e Esquemas Eletrônicos
-│   ├── stl_parts/              # Peças impressas em 3D para a máquina
-│   └── wiring_diagram.pdf      # Diagrama de ligação da CNC Shield
-│
-└── README.md                   # Este arquivo
+Pick-and-Place/
+├── arduino/                 # Arquivos de firmware para o Arduino
+│   ├── arduino.ino
+│   └── funcoes.ino
+├── img/                     # Imagens e materiais visuais do projeto
+├── peças3D/                 # Arquivos 3D das peças da máquina
+├── src/                     # Código principal em Python
+│   ├── binarizacao.py
+│   ├── classe.py
+│   ├── main.py
+│   ├── video.py
+│   └── images/              # Imagens usadas pelos scripts
+├── requirements.txt         # Dependências do projeto
+└── README.md                # Documentação do projeto
 ```
 
 ## 🚀 Como Começar
@@ -77,17 +70,15 @@ meu-projeto-cnc/
 Pré-requisitos
 - [Arduino IDE](https://docs.arduino.cc/software/ide/) instalado para compilar o firmware.
 - Python 3.12.10 instalado.
-- Bibliotecas Python: opencv-python, pyserial, flask.
+- Bibliotecas Python: opencv-python, pyserial, flet, numpy, scikit-learn.
 
 Instalação e Execução (Resumo)
-Faça o upload dos arquivos da pasta arduino/ para o seu Arduino Uno.
-Certifique-se de que a CNC Shield está devidamente alimentada.
-No terminal, navegue até a pasta backend/ e instale as dependências: pip install -r requirements.txt.
-Inicie o servidor Flask: python app.py.
-Acesse o Dashboard pelo seu navegador para controlar a máquina.
-
-
-## 📝 Licença
+- Faça o upload dos arquivos da pasta arduino/ para o seu Arduino Uno.
+- Certifique-se de que a CNC Shield está devidamente alimentada.
+- No terminal, navegue até a pasta backend/ e instale as dependências:
+  - pip install -r requirements.txt.
+- Inicie o servidor flet: flet run main.py
+- Acesse o Dashboard pelo seu navegador para controlar a máquina.
 
 
 ## 👤 Autores
@@ -101,7 +92,7 @@ Acesse o Dashboard pelo seu navegador para controlar a máquina.
 
 ## 📞 Suporte e Contato
 
-
+Email: pribeirofernande@gmail
 ---
 
 **Status**: Em desenvolvimento 🚧
