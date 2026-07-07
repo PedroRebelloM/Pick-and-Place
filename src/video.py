@@ -76,7 +76,7 @@ while True:
     if len(dadosParafusos) >= 3:
         X = np.array([p['espessura'] for p in dadosParafusos]).reshape(-1, 1)
         
-        nClusters = min(3, len(dadosParafusos))
+        nClusters = min(1, len(dadosParafusos))
         kmeans = KMeans(n_clusters=nClusters, random_state=42, n_init=10).fit(X)
         labels = kmeans.labels_
         
@@ -84,6 +84,8 @@ while True:
         indicesOrdenados = np.argsort(centros) 
         
         mapaClasses = {0: "M2", 1: "M3", 2: "M4"}
+
+
         
         for idx, p in enumerate(dadosParafusos):
             clusterAtual = labels[idx]
@@ -96,9 +98,11 @@ while True:
             cv2.drawContours(frameContornos, [box], 0, (0, 255, 0), 2)                
             
             bx, by, bw, bh = p['bbox']
+
+            
             cv2.putText(frameContornos, f"{classe} (espessura={p['espessura']:.1f})", (bx, by - 5), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-                        
+                  
     elif len(dadosParafusos) > 0:
         for p in dadosParafusos:
             bx, by, bw, bh = p['bbox']

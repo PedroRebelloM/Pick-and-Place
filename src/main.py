@@ -6,9 +6,9 @@ import serial.tools.list_ports
 from classe import ScrewDetector
 
 try:
-    arduino = serial.Serial('COM4', 9600, timeout=1)
+    arduino = serial.Serial('COM7', 9600, timeout=1)
 except Exception as e:
-    print("Arduino não conectado!")
+    print(f"Arduino não conectado! Erro detalhado: {e}")
     arduino = None
 
 async def main(page: ft.Page):
@@ -20,7 +20,7 @@ async def main(page: ft.Page):
 
     # cria um pixel invisivel temporario para evitar erro de imagem vazia ao carregar
     pixelFicticio = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-    videoFrame = ft.Image(src=pixelFicticio, fit="contain", width=640, height=480, gapless_playback=True)
+    videoFrame = ft.Image(src=pixelFicticio, fit="contain", gapless_playback=True)
     
     # texto informativo de status na base da tela
     statusText = ft.Text(
@@ -30,7 +30,7 @@ async def main(page: ft.Page):
         color=ft.Colors.GREEN_400
     )
 
-    detector = ScrewDetector(camera_id=0)
+    detector = ScrewDetector(camera_id=1)
     
     # atualiza o status dependendo se o hardware foi localizado
     if detector.is_opened():
@@ -43,7 +43,9 @@ async def main(page: ft.Page):
     estado = {
         "running": False,
         "comecar_time": None,
-        "tempo_parado": 0.0
+        "tempo_parado": 0.0,
+        "movendo": False, 
+        "magnetizado": False
     }
 
     time_text = ft.Text("Tempo: 00:00:00", size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.YELLOW_400)
@@ -62,19 +64,23 @@ async def main(page: ft.Page):
 
     def btn_descer_click(e):
         if arduino is not None:
-            arduino.write("DESCER\n".encode("utf-8"))
+            arduino.write("IMA DESCE\n".encode("utf-8"))
 
     def btn_subir_click(e):
         if arduino is not None:
-            arduino.write("SUBIR\n".encode("utf-8"))
+            arduino.write("IMA SOBE\n".encode("utf-8"))
 
     def btn_magnetizar_click(e):
         if arduino is not None:
-            arduino.write("MAGNETIZAR\n".encode("utf-8"))
+            arduino.write("IMA LIGA\n".encode("utf-8"))
+        else:
+            print("Erro magnetizar")
 
     def btn_desmagnetizar_click(e):
         if arduino is not None:
-            arduino.write("DESMAGNETIZAR\n".encode("utf-8"))
+            arduino.write("IMA DESLIGA\n".encode("utf-8"))
+        else:
+            print("Erro desmagnetizar")
             
             
     # funcao executada ao clicar no botao pausar
@@ -107,6 +113,12 @@ async def main(page: ft.Page):
         else:
             print("Erro mover_click")
 
+    def btn_restaurar_padroes(e):
+        detector.restaurar_padroes()
+        statusText.value = "Padrões Restaurados"
+        statusText.color = ft.Colors.BLUE_400
+        statusText.update()
+
     # desenha os botoes na interface
     btn_comecar = ft.ElevatedButton("Começar", icon="play_arrow", on_click=btn_comecar_click, bgcolor=ft.Colors.GREEN_700, color=ft.Colors.WHITE)
     btn_pause = ft.ElevatedButton("Pausar", icon="pause", on_click=btn_pause_click, bgcolor=ft.Colors.ORANGE_700, color=ft.Colors.WHITE)
@@ -118,6 +130,7 @@ async def main(page: ft.Page):
     btn_desmagnetizar = ft.ElevatedButton("Ímã OFF", icon="power_off", on_click=btn_desmagnetizar_click, bgcolor=ft.Colors.BROWN_700, color=ft.Colors.WHITE)
 
     btn_home = ft.ElevatedButton("Homing", icon="home", on_click=btn_home_click, bgcolor=ft.Colors.BROWN_700, color=ft.Colors.WHITE)
+    btn_restaurar = ft.ElevatedButton("Restaurar Limites", icon="restore", on_click=btn_restaurar_padroes, bgcolor=ft.Colors.GREY_700, color=ft.Colors.WHITE)
 
     # campos de texto para movimentacao manual
     input_x = ft.TextField(label="X", width=80, height=40, text_size=14, keyboard_type=ft.KeyboardType.NUMBER)
@@ -129,7 +142,7 @@ async def main(page: ft.Page):
         ft.Row([btn_comecar, btn_pause], alignment=ft.MainAxisAlignment.CENTER),
         ft.Row([btn_descer, btn_subir], alignment=ft.MainAxisAlignment.CENTER),
         ft.Row([btn_magnetizar, btn_desmagnetizar], alignment=ft.MainAxisAlignment.CENTER),
-        ft.Row([btn_home], alignment=ft.MainAxisAlignment.CENTER),
+        ft.Row([btn_home, btn_restaurar], alignment=ft.MainAxisAlignment.CENTER),
         ft.Divider(color=ft.Colors.WHITE24),
         ft.Row([input_x, input_y, btn_mover], alignment=ft.MainAxisAlignment.CENTER)
     ], spacing=10)
@@ -167,6 +180,22 @@ async def main(page: ft.Page):
             ft.Row([chk_m2, chk_m3, chk_m4], alignment=ft.MainAxisAlignment.START)
         ], spacing=2)
     )
+    # controles da zona morta
+    input_zx1 = ft.TextField(label="X1", value="0", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+    input_zy1 = ft.TextField(label="Y1", value="0", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+    input_zx2 = ft.TextField(label="X2", value="540", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+    input_zy2 = ft.TextField(label="Y2", value="1080", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+    
+    zona_morta_container = ft.Container(
+        content=ft.Row([
+            ft.Text("Configurar Zona Morta (Limites do Retângulo):", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE, size=16),
+            input_zx1, input_zy1, input_zx2, input_zy2
+        ], alignment=ft.MainAxisAlignment.START, spacing=15),
+        padding=15,
+        bgcolor=ft.Colors.SURFACE_CONTAINER_HIGHEST,
+        border_radius=12,
+    )
+
     # monta o retangulo de dados na tela
     info_panel = ft.Container(
         content=ft.Column(
@@ -196,17 +225,21 @@ async def main(page: ft.Page):
     page.add(
         ft.Row(
             controls=[
-                ft.Card(
-                    content=ft.Container(
-                        content=videoFrame,
-                        padding=5,
-                        bgcolor=ft.Colors.BLACK,
-                        border_radius=12
+                ft.Column([
+                    ft.Card(
+                        content=ft.Container(
+                            content=videoFrame,
+                            padding=5,
+                            bgcolor=ft.Colors.BLACK,
+                            border_radius=12,
+                        ),
+                        elevation=8,
                     ),
-                    elevation=8
-                ),
+                    zona_morta_container
+                ], expand=True, spacing=15),
                 info_panel
             ],
+            expand=True,
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.START,
             spacing=20
@@ -219,10 +252,8 @@ async def main(page: ft.Page):
 
     # parametros de calibracao da cnc (mapeamento camera -> real)
     #24.3 altura
-    escala_x_mm_por_pixel = 0.5 
-    escala_y_mm_por_pixel = 0.5 
-    offset_x_mm = 100.0
-    offset_y_mm = 50.0
+    offset_x_mm = 10
+    offset_y_mm = 50
     # variavel de controle para a maquina nao pegar o mesmo parafuso duas vezes
     alvos_enviados = []
 
@@ -239,8 +270,14 @@ async def main(page: ft.Page):
                     "m4": chk_m4.value
                 }
             
+                # tenta ler a zona morta, usa padrao se estiver vazio ou invalido
+                try:
+                    zm = (int(input_zx1.value), int(input_zy1.value), int(input_zx2.value), int(input_zy2.value))
+                except:
+                    zm = (0, 0, 540, 1080)
+            
                 # processamento da imagem ao vivo da camera
-                retorno, dadosBase64, stats, alvos = detector.process_frame(filters=filtros_atuais)
+                retorno, dadosBase64, stats, alvos = detector.process_frame(filters=filtros_atuais, detect=not estado["movendo"], zona_morta=zm)
                 
                 if not retorno:
                     await asyncio.sleep(0.01)
@@ -292,31 +329,88 @@ async def main(page: ft.Page):
                         total_text.value = new_total
                         total_text.update()
 
-                    if arduino is not None and len(alvos) > 0:
+                    # verifica se o Arduino enviou alguma mensagem
+                    if arduino is not None and arduino.in_waiting > 0:
+                        try:
+                            dados_lidos = arduino.read(arduino.in_waiting).decode("utf-8")
+                            
+                            if "CHEGOU" in dados_lidos:
+                                if estado["magnetizado"]:
+                                    # Chegou na CAIXA (hora de soltar)
+                                    arduino.write("IMA DESCE\n".encode("utf-8"))
+                                    arduino.write("IMA DESLIGA\n".encode("utf-8"))
+                                    arduino.write("IMA SOBE\n".encode("utf-8"))
+                                    estado["magnetizado"] = False
+                                    arduino.write("HOME\n".encode("utf-8"))
+                                    estado["movendo"] = True # Continua bloqueado esperando o HOME
+                                else:
+                                    # Chegou no PARAFUSO (hora de pegar)
+                                    arduino.write("IMA DESCE\n".encode("utf-8"))
+                                    arduino.write("IMA LIGA\n".encode("utf-8"))
+                                    arduino.write("IMA SOBE\n".encode("utf-8"))
+                                    estado["magnetizado"] = True
+                                    
+                                    # Descobre para onde levar baseado na classe do alvo
+                                    classe = estado.get("alvo_atual_classe", "Desc.")
+                                    
+                                    # AQUI VOCÊ DEFINE AS COORDENADAS (X, Y) DAS SUAS CAIXAS EM PASSOS:
+                                    if classe == "M2":
+                                        arduino.write("MOVE X:10 Y:10\n".encode("utf-8"))
+                                    elif classe == "M3":
+                                        arduino.write("MOVE X:20 Y:20\n".encode("utf-8"))
+                                    elif classe == "M4":
+                                        arduino.write("MOVE X:30 Y:30\n".encode("utf-8"))
+                                    else:
+                                        arduino.write("MOVE X:40 Y:40\n".encode("utf-8")) # Porcas/Outros
+                                        
+                                    estado["movendo"] = True
+                            
+                            # Quando o HOME finaliza, a maquina fica livre para uma nova deteccao
+                            if "PAROU" in dados_lidos:
+                                estado["movendo"] = False
+                                print("Máquina finalizou a rota e está livre para o próximo alvo!")
+
+                        except Exception as e:
+                            print(f"Erro na leitura serial: {e}")
+
+                    # Só envia o próximo comando se a máquina NÃO estiver se movendo
+                    if arduino is not None and len(alvos) > 0 and not estado["movendo"]:
                         for alvo in alvos:
                             # cria um id unico baseado na posicao grosseira para nao mandar o mesmo alvo duas vezes
                             alvo_id = f"{alvo['classe']}_{int(alvo['cx'])}_{int(alvo['cy'])}"
                             
                             if alvo_id not in alvos_enviados:
+                                # usa a escala fixa real do detector (0.29 mm/px)
+                                escala_real = 0.1735
+                                
                                 # converte as coordenadas de pixels (camera) para milimetros (mesa cnc)
-                                pos_x_real = offset_x_mm + (alvo["cx"] * escala_x_mm_por_pixel)
-                                pos_y_real = offset_y_mm + (alvo["cy"] * escala_y_mm_por_pixel)
+                                pos_x_real = offset_x_mm + (alvo["cx"] * escala_real)
+                                pos_y_real = offset_y_mm + (alvo["cy"] * escala_real)
+                                
+                                pos_x_passos = pos_x_real / 50
+                                pos_y_passos = pos_y_real / 50
                                 
                                 # monta o comando que o arduino vai entender(i nclui classe para talvez caixas diferentes)
                                 # PEGAR M4 = vai para x,y -> desce servo -> liga rele -> sobe servo -> vai pra caixa M4 -> desliga rele
-                                comando = f"PEGAR,{alvo['classe']},{pos_x_real:.1f},{pos_y_real:.1f}\n"
+                                #comando = f"PEGAR,{alvo['classe']},{pos_x_real:.1f},{pos_y_real:.1f}\n"
+                                comando = f"MOVE X:{pos_x_passos:.1f} Y:{pos_y_passos:.1f}\n"
                                 #PEGAR,m4,x,y
                                 # envia o comando pela porta serial (descomente quando for ligar a maquina)
                                 arduino.write(comando.encode("utf-8"))
+                                print(f"Enviando comando para pegar {alvo['classe']}: {comando.strip()}")
+                                
+                                # salva a classe atual para saber em qual caixa soltar depois
+                                estado["alvo_atual_classe"] = alvo['classe']
+                                
+                                # trava o envio de novos comandos até receber o CHEGOU/PAROU
+                                estado["movendo"] = True
                                 
                                 # salva na lista de concluidos
                                 alvos_enviados.append(alvo_id)
-                                print(f"Comando preparado: {comando.strip()}")
                                 
-                                # pausa de seguranca entre um envio e outro para o arduino nao engasgar
-                                # na pratica, o ideal e ler um "OK" do arduino antes de enviar o proximo!
-                                await asyncio.sleep(0.5)
-
+                                # como enviamos um comando de movimento, paramos de olhar os outros alvos neste frame
+                                # para esperar o PAROU chegar no próximo ciclo!
+                                break
                 await asyncio.sleep(0.03)
 
             except Exception as e:
