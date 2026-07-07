@@ -50,7 +50,7 @@ Todos os componentes 3D personalizados foram projetados para otimizar a precisã
 
 | Peça | Descrição | Arquivo |
 |------|-----------|---------|
-| **Cabeça CNC** | Componente principal de montagem e estrutura | [`cabeça_CNC.x_t`](peças3D/cabeça_CNC.x_t) |
+| **Cabeça CNC** | Componente principal de montagem e estrutura | [`cabeça_CNC.stl`](peças3D/cabeça_CNC.stl) |
 | **Pinhão 17mm** | Pinhão para transmissão de movimento dos motores NEMA 17 | [`pinhao17mm.stl`](peças3D/pinhao17mm.stl) |
 | **Cremalheira** | Cremalheira de transmissão linear para os eixos | [`cremalheira.stl`](peças3D/cremalheira.stl) |
 | **Suporte Cremalheira** | Suporte estrutural para fixação da cremalheira | [`suporte_cremalheira.stl`](peças3D/suporte_cremalheira.stl) |
@@ -58,6 +58,8 @@ Todos os componentes 3D personalizados foram projetados para otimizar a precisã
 | **Suporte Câmera 2** | Suporte adicional/complementar para câmera | [`suporte_camera2.stl`](peças3D/suporte_camera2.stl) |
 | **Calço Motor NEMA17** | Calço de alinhamento para os motores NEMA 17 | [`calço_motor_nema17.stl`](peças3D/calço_motor_nema17.stl) |
 | **Fixador Motor** | Peça de fixação dos motores na estrutura | [`fixador_motor.stl`](peças3D/fixador_motor.stl) |
+
+**Montagem das peças** :  [`montagem_cabeçaCNC.zip`](montagem_cabeçaCNC.zip)
 
 ### 📥 Como Usar as Peças 3D
 
