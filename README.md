@@ -59,7 +59,7 @@ Todos os componentes 3D personalizados foram projetados para otimizar a precisã
 | **Calço Motor NEMA17** | Calço de alinhamento para os motores NEMA 17 | [`calço_motor_nema17.stl`](peças3D/calço_motor_nema17.stl) |
 | **Fixador Motor** | Peça de fixação dos motores na estrutura | [`fixador_motor.stl`](peças3D/fixador_motor.stl) |
 
-**Montagem das peças** :  [`montagem_cabeçaCNC.slt`](peças3D/montagem_cabeçaCNC.slt)
+**Montagem das peças** :  [`montagem_cabeçaCNC.stl`](peças3D/montagem_cabeçaCNC.stl)
 
 ### 📥 Como Usar as Peças 3D
 
