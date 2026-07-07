@@ -92,7 +92,7 @@ Instalação e Execução (Resumo)
 
 ## 📞 Suporte e Contato
 
-Email: pribeirofernande@gmail
+
 ---
 
 **Status**: Em desenvolvimento 🚧
