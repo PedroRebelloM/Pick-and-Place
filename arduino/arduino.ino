@@ -1,6 +1,7 @@
 #include <AccelStepper.h>
 #include <string.h>
 #include <Servo.h>
+#include <Adafruit_NeoPixel.h>
 
 /*** Definição dos pinos padrão da CNC Shield V3.0 ***/
 // Pino que liga/desliga a energia de todos os drivers
@@ -16,7 +17,7 @@
 //#define MOTOR_Z_DIR 7
 
 #define INICIO_CURSO_X 9
-#define INICIO_CURSO_Y 10
+#define INICIO_CURSO_Y 11
 
 #define RELE_IMA 12
 #define MOTOR_IMA 13
@@ -26,13 +27,25 @@
 //#define MOTOR_A_STEP 12
 //#define MOTOR_A_DIR 13
 
+// Pino da fita de LED
+#define PIN_LED 7 
+// Quantidade de LEDs na fita/anel
+#define NUM_LEDS 60
+
+Adafruit_NeoPixel pixels(NUM_LEDS, PIN_LED, NEO_GRB + NEO_KHZ800);
+
 Servo motor_ima;
 
 int POS_X = 0;
 int POS_Y = 0;
 
+int JANELA_X = 300;
+int JANELA_Y = 300;
+
 float velocidade = 150;
 float aceleracao = 100;
+
+bool em_movimento = false;
 
 float velo_homing = -300;
 
@@ -55,11 +68,11 @@ void setup() {
   // HIGH -> Chave aberta
   // LOW -> Chave fechada
   // Conexão no projeto -> Normalmente fechada
-  pinMode(INICIO_CURSO_X, LOW);
-  pinMode(INICIO_CURSO_Y, LOW);
+  pinMode(INICIO_CURSO_X, INPUT_PULLUP);
+  pinMode(INICIO_CURSO_Y, INPUT_PULLUP);
 
   pinMode(RELE_IMA, OUTPUT);
-  digitalWrite(RELE_IMA, LOW);
+  digitalWrite(RELE_IMA, HIGH);
   motor_ima.attach(MOTOR_IMA);
   motor_ima.write(SERVO_POS_INI);
 
@@ -72,6 +85,8 @@ void setup() {
   motor_y.setMaxSpeed(velocidade);
   // Aceleração no eixo y
   motor_y.setAcceleration(aceleracao);
+
+  fita_led();
 
   homing ();
 
@@ -94,12 +109,17 @@ void loop() {
     // IMA DESLIGA
 
     if (comando.startsWith("STOP") ) {
+      motor_x.stop();
+      motor_y.stop();
       digitalWrite(EN_PIN, HIGH);
     }
     else
+    if(comando.startsWith("ESPALHA") ) {
+      espalha_parafusos(JANELA_X,JANELA_Y,0,0);
+    }
     if (comando.startsWith("MOVE")) {
       digitalWrite(EN_PIN, LOW);
-      Serial.print("Motores ligados");
+      //Serial.print("Motores ligados");
       
       // Leitura da posição X e Y
       int index_X = comando.indexOf("X");
@@ -111,6 +131,13 @@ void loop() {
       if (index_Y != -1){
         POS_Y = (comando.substring(index_Y+1)).toInt();
       }
+
+          // Define uma posição especifica de descolamento
+      motor_x.moveTo(POS_X);
+      motor_y.moveTo(POS_Y);
+
+      // Avisa o sistema que um movimento acabou de começar
+      em_movimento = true;
     } // MOVE
     else
     if (comando.startsWith("HOME")){
@@ -123,45 +150,46 @@ void loop() {
           motor_ima.write(angulo);
           delay(15);
         }
+        Serial.println("DESCI");
       } 
       else
       if (comando.substring(4) == "SOBE"){
-        for (int angulo = 180; angulo >= 180; angulo--) {
+        for (int angulo = 180; angulo >= 0; angulo--) {
           motor_ima.write(angulo);
           delay(15);
         }
+        Serial.println("SUBI");
       }
       else
       if (comando.substring(4) == "LIGA"){
-        digitalWrite(RELE_IMA, HIGH);
+        digitalWrite(RELE_IMA, LOW);
+        Serial.println("LIGUEI");
       }
       else
       if (comando.substring(4) == "DESLIGA"){
-        digitalWrite(RELE_IMA, LOW); 
+        digitalWrite(RELE_IMA, HIGH);
+        Serial.println("DESLIGUEI");
       }
     }
     else{
-      Serial.print("Comando inválido!");  
+      Serial.println("Comando inválido!");  
     }
 
-    Serial.print("Posições X e Y: ");
-    Serial.print(POS_X);
-    Serial.print(" ");
-    Serial.println(POS_Y);
-
-    // Define uma posição especifica de descolamento
-    motor_x.move(POS_X);
-    motor_y.move(POS_Y);
-  }
-
-  POS_X = 0;
-  POS_Y = 0;
+    //Serial.print("Posições X e Y: ");
+    //Serial.print(POS_X);
+    //Serial.print(" ");
+    //Serial.println(POS_Y);
+  
+  } // leitura serial
 
   // Verifica se o motor x e o motor y chegarram a posição definada anteriormente
   // Se verdadeiro, desliga a alimentação do motores
-  if (motor_x.distanceToGo() == 0 && motor_y.distanceToGo() == 0){
+  if (em_movimento && motor_x.distanceToGo() == 0 && motor_y.distanceToGo() == 0){
     digitalWrite(EN_PIN, HIGH);
-  }
+
+    Serial.println("CHEGUEI");
+    em_movimento = false;
+  } 
 
   motor_x.run();
   motor_y.run();
