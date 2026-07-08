@@ -1,8 +1,8 @@
 // FUNÇÃO PARA ESPALHAR PARAFUSOS
 
 # define AMPLITUDE_ONDA 300
-# define COMPRIMENTO_PERCURSO_X 800
-# define PASSO_X 10
+# define COMPRIMENTO_PERCURSO_X 700
+# define PASSO_X 5
 # define PERIODO_ONDA 100
 
 // Posição X e Y
@@ -11,6 +11,12 @@
 void espalha_parafusos(int velo_esp, int acel_esp) {
 
   //Serial.println("Iniciando espalhamento de parafusos...");
+  if (velo_esp == 0){
+    velo_esp = 500;
+  }
+  if (acel_esp == 0){
+    acel_esp = 300;
+  }
 
   // Desativa o ima
   digitalWrite(RELE_IMA, HIGH);
@@ -25,6 +31,23 @@ void espalha_parafusos(int velo_esp, int acel_esp) {
 
   int posX_inicial = 603;
   int posY_inicial = 769;
+
+  motor_x.moveTo(posX_inicial);
+  motor_y.moveTo(posY_inicial);
+
+  motor_x.run();
+  motor_y.run();
+
+  while (motor_x.distanceToGo() != 0 || motor_y.distanceToGo() != 0) {
+    motor_x.run();
+    motor_y.run();
+  }
+
+  // Move o servo do imã para baixo
+  for (int angulo = motor_ima.read(); angulo <= 180; angulo++) {
+    motor_ima.write(angulo);
+    delay(15);
+  }
 
   // Percorre o eixo X em pequenos passos, calculando Y = amplitude * sen(x)
   for (long x = 0; x <= COMPRIMENTO_PERCURSO_X; x += PASSO_X) {
@@ -55,20 +78,12 @@ void espalha_parafusos(int velo_esp, int acel_esp) {
     }
   } // for
 
-  /*  
-  // Move o servo do imã para baixo
-  for (int angulo = motor_ima.read(); angulo <= 180; angulo++) {
-    motor_ima.write(angulo);
-    delay(15);
-  }
-
-
+  
   // Eletrimã retorna a posição inicial
   for (int angulo = 180; angulo >= SERVO_POS_INI; angulo--) {
     motor_ima.write(angulo);
     delay(15);
   }
-  */
 
   //Serial.println("Espalhamento de parafusos concluído!");
 
@@ -76,6 +91,8 @@ void espalha_parafusos(int velo_esp, int acel_esp) {
   POS_X = motor_x.currentPosition();
   POS_Y = motor_y.currentPosition();
   Serial.println("ESPALHEI");
+
+  homing();
 
 } // espalha_parafusos
 
@@ -89,7 +106,7 @@ void homing () {
   digitalWrite(EN_PIN, LOW);
 
   // EIXO X
-  Serial.println("Voltando para o início do Eixo X");
+  //Serial.println("Voltando para o início do Eixo X");
   motor_x.setSpeed(velo_homing); 
   
   // Enquando não chegou na chave de fim de curso
@@ -102,10 +119,10 @@ void homing () {
   // Definie onde é a posição 0
   motor_x.setCurrentPosition(0);
   POS_X = 0;
-  Serial.println("Eixo X zerado!");
+  //Serial.println("Eixo X zerado!");
 
   // EIXO Y
-  Serial.println("Voltando para o início do Eixo Y");
+  //Serial.println("Voltando para o início do Eixo Y");
   motor_y.setSpeed(velo_homing); 
   
   while (digitalRead(INICIO_CURSO_Y) == LOW) {
@@ -115,17 +132,24 @@ void homing () {
   motor_y.stop();
   motor_y.setCurrentPosition(0);
   POS_Y = 0;
-  Serial.println("Eixo Y zerado!");
+  //Serial.println("Eixo Y zerado!");
 
   // Posição inicial do servo imã
   int angulo_atual = motor_ima.read();
 
   // Retorna o eletrima para posição inicial
+  /*
   if (angulo_atual > 0){
     for (int angulo = angulo_atual; angulo >= angulo_atual; angulo--) {
       motor_ima.write(angulo);
       delay(15);
     }
+  }
+  */
+
+  for (int angulo = 180; angulo >= SERVO_POS_INI; angulo--) {
+    motor_ima.write(angulo);
+    delay(15);
   }
 
   Serial.println("PAROU");
@@ -146,6 +170,6 @@ void fita_led() {
   
   pixels.show(); // Envia os dados para os LEDs acenderem
 
-  Serial.println("Leds acesos!");
+  //Serial.println("Leds acesos!");
 
 }
