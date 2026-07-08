@@ -78,7 +78,7 @@ void espalha_parafusos(int velo_esp, int acel_esp) {
 
   //Serial.println("Espalhamento de parafusos concluído!");
 
-  // Mantém POS_X / POS_Y coerentes com o restante do código
+  // Mantém POS_X / POS_Y 
   POS_X = motor_x.currentPosition();
   POS_Y = motor_y.currentPosition();
   Serial.println("ESPALHEI");
