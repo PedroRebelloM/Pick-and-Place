@@ -164,7 +164,7 @@ async def main(page: ft.Page):
         ft.Row([btn_descer, btn_subir], alignment=ft.MainAxisAlignment.CENTER),
         ft.Row([btn_magnetizar, btn_desmagnetizar], alignment=ft.MainAxisAlignment.CENTER),
         ft.Row([btn_home, btn_restaurar], alignment=ft.MainAxisAlignment.CENTER),
-        ft.Row([btn_espalhar], alignment=ft.MainAxisAlignment.CENTER),
+        ft.Row([btn_espalhar, ft.Container(width=100)], alignment=ft.MainAxisAlignment.CENTER),
         ft.Divider(color=ft.Colors.WHITE24),
         ft.Row([input_x, input_y, btn_mover], alignment=ft.MainAxisAlignment.CENTER)
     ], spacing=10)
