@@ -29,9 +29,6 @@ void espalha_parafusos(int velo_esp, int acel_esp) {
   motor_x.moveTo(posX_inicial);
   motor_y.moveTo(posY_inicial);
 
-  motor_x.run();
-  motor_y.run();
-
   while (motor_x.distanceToGo() != 0 || motor_y.distanceToGo() != 0) {
     motor_x.run();
     motor_y.run();
