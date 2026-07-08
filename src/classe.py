@@ -19,6 +19,9 @@ class ScrewDetector:
         self.default_limite_sup = (180, 255, 255)
         self.limite_inf = self.default_limite_inf
         self.limite_sup = self.default_limite_sup
+        
+        # Contador para controlar a frequencia de logs no terminal
+        self.contador_print = 0
 
     def restaurar_padroes(self):
         """Volta os limites HSV para o padrão de fábrica"""
@@ -36,10 +39,6 @@ class ScrewDetector:
         retorno, frame = self.cap.read()
         if not retorno:
             return False, None, None, None
-            
-        # garante que a variavel existe (caso seja a primeira execucao)
-        if not hasattr(self, 'contador_print'):
-            self.contador_print = 0
             
         self.contador_print += 1
             
@@ -80,21 +79,29 @@ class ScrewDetector:
         mascaraLimpa = cv2.morphologyEx(mascaraInvertida, cv2.MORPH_OPEN, kernel)
         mascaraLimpa = cv2.morphologyEx(mascaraLimpa, cv2.MORPH_CLOSE, kernel)
         
+        min_zx, max_zx = min(zx1, zx2), max(zx1, zx2)
+        min_zy, max_zy = min(zy1, zy2), max(zy1, zy2)
+        # Preenche a zona morta com preto (0) na mascara binária final para apagar qualquer peça ali dentro
+        cv2.rectangle(mascaraLimpa, (min_zx, min_zy), (max_zx, max_zy), 0, -1)
+        
         # desenha o esqueleto das bordas de todos os objetos que sobraram
         contornos, _ = cv2.findContours(mascaraLimpa, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         frameContornos = frame.copy()
         
-        cv2.rectangle(frameContornos, (zx1, zy1), (zx2, zy2), (0, 0, 255), 2)
-        cv2.putText(frameContornos, "ZONA MORTA", (zx1 + 10, zy1 + 30), 
+        min_zx, max_zx = min(zx1, zx2), max(zx1, zx2)
+        min_zy, max_zy = min(zy1, zy2), max(zy1, zy2)
+        cv2.rectangle(frameContornos, (min_zx, min_zy), (max_zx, max_zy), (0, 0, 255), 2)
+        cv2.putText(frameContornos, "ZONA MORTA", (min_zx + 10, min_zy + 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
             
-        cv2.circle(frameContornos, (960, 540), 8, (0, 255, 0), 10)  
+        cv2.circle(frameContornos, (960, 540), 2, (0, 255, 0), 2)  
+        cv2.rectangle(frameContornos, (0, 540), (1920, 540), (0, 255, 0), 2)
         dadosParafusos = []
         dadosPorcas = []
         # analisa e separa cada bloco branco achado na tela
-        for contorno in contornos:
+        for i, contorno in enumerate(contornos):
             area = cv2.contourArea(contorno)
             
             # descarta farelos pequenos ou areas grandes que podem ser sombras
@@ -106,10 +113,11 @@ class ScrewDetector:
                 
                 # Imprime a cada 100 frames para nao poluir o terminal
                 if self.contador_print >= 100:
-                     print(f"[DEBUG] x: {cx}, y: {cy}")
-                     print(f"[DEBUG] xreal: {((cx*0.1735 + 10)/10)*50}, yreal: {((cy*0.1735 + 55)/10)*50}")
+                     print(f"[DEBUG] ID: {i} | xreal: {((cx*0.1735 + 10)/10)*50:.1f}, yreal: {((cy*0.1735 + 55)/10)*50:.1f}")
                 
-                if (zx1 <= cx <= zx2) and (zy1 <= cy <= zy2): 
+                min_zx, max_zx = min(zx1, zx2), max(zx1, zx2)
+                min_zy, max_zy = min(zy1, zy2), max(zy1, zy2)
+                if (min_zx <= cx <= max_zx) and (min_zy <= cy <= max_zy): 
                     continue
                     
                 # calcula um retangulo justinho que inclina junto com a rotacao do objeto
@@ -160,19 +168,19 @@ class ScrewDetector:
             cy = by + (bh / 2)
             alvos.append({"classe": "Porca", "cx": cx, "cy": cy})
             
-            cv2.putText(frameContornos, "Porca", (bx, by - 5), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            cv2.putText(frameContornos, "Porca", (bx, by - 10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 0, 0), 3)
 
         # agrupa as espessuras dos parafusos usando inteligencia artificial
-        if len(dadosParafusos) >= 3:
+        if len(dadosParafusos) >= 1:
             X = np.array([p['espessura'] for p in dadosParafusos]).reshape(-1, 1)
-            nClusters = min(2, len(dadosParafusos))
+            nClusters = min(3, len(dadosParafusos))
             kmeans = KMeans(
                 n_clusters=nClusters, 
                 random_state=42, 
                 n_init=1, 
                 max_iter=100, 
-                algorithm='elkan'
+                algorithm='lloyd'
             ).fit(X)
             
             labels = kmeans.labels_
@@ -205,14 +213,9 @@ class ScrewDetector:
                 cy = by + (bh / 2)
                 alvos.append({"classe": classe, "cx": cx, "cy": cy})
                 
-                cv2.putText(frameContornos, f"{classe} (e={p['espessura']:.1f})", (bx, by - 5), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                cv2.putText(frameContornos, f"{classe} (e={p['espessura']:.1f})", (bx, by - 10), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
                         
-        elif len(dadosParafusos) > 0:
-            for p in dadosParafusos:
-                bx, by, bw, bh = p['bbox']
-                cv2.putText(frameContornos, "Aguardando objetos...", (bx, by - 5), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 165, 255), 1)
 
         # pega a matriz crua que o opencv criou com desenhos em verde e transforma em imagem comprimida
         _, buffer = cv2.imencode(".jpg", frameContornos)

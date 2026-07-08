@@ -1,21 +1,14 @@
 // FUNÇÃO PARA ESPALHAR PARAFUSOS
 
-# define AMPLITUDE_ONDA 200
-# define COMPRIMENTO_PERCURSO_X 400 
+# define AMPLITUDE_ONDA 1200
+# define COMPRIMENTO_PERCURSO_X 1150 
 # define PASSO_X 20
-# define PERIODO_ONDA 300
+# define PERIODO_ONDA 150
 
 // Posição X e Y
 // Velocidade do espalhamento
 // Aceleração do espalhamento
-void espalha_parafusos(int x, int y, int velo_esp, int acel_esp) {
-
-  if (velo_esp == 0){
-    velo_esp = 500;
-  }
-  if (acel_esp == 0){
-    acel_esp = 300;
-  }
+void espalha_parafusos(int velo_esp, int acel_esp) {
 
   //Serial.println("Iniciando espalhamento de parafusos...");
 
@@ -36,8 +29,8 @@ void espalha_parafusos(int x, int y, int velo_esp, int acel_esp) {
   motor_y.setMaxSpeed(velo_esp);
   motor_y.setAcceleration(acel_esp);
 
-  int posX_inicial = x;
-  int posY_inicial = y;
+  int posX_inicial = 603;
+  int posY_inicial = 369;
 
   // Percorre o eixo X em pequenos passos, calculando Y = amplitude * sen(x)
   for (long x = 0; x <= COMPRIMENTO_PERCURSO_X; x += PASSO_X) {
@@ -79,6 +72,7 @@ void espalha_parafusos(int x, int y, int velo_esp, int acel_esp) {
   // Mantém POS_X / POS_Y coerentes com o restante do código
   POS_X = motor_x.currentPosition();
   POS_Y = motor_y.currentPosition();
+  Serial.println("ESPALHEI");
 
 } // espalha_parafusos
 

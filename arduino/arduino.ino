@@ -39,8 +39,8 @@ Servo motor_ima;
 int POS_X = 0;
 int POS_Y = 0;
 
-int JANELA_X = 300;
-int JANELA_Y = 300;
+int JANELA_X = 1150;
+int JANELA_Y = 1200;
 
 float velocidade = 150;
 float aceleracao = 100;
@@ -115,7 +115,7 @@ void loop() {
     }
     else
     if(comando.startsWith("ESPALHA") ) {
-      espalha_parafusos(JANELA_X,JANELA_Y,0,0);
+      espalha_parafusos(velocidade, aceleracao);
     }
     if (comando.startsWith("MOVE")) {
       digitalWrite(EN_PIN, LOW);
