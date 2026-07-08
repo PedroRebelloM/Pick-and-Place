@@ -425,7 +425,7 @@ async def main(page: ft.Page):
                     except Exception as e:
                         print(f"Erro na leitura serial: {e}")
 
-                # Só envia o próximo comando se o sistema estiver rodando ("Começar") e a máquina NÃO estiver se movendo
+                # só envia o próximo comando se o sistema estiver rodando ("Começar") e a máquina NÃO estiver se movendo
                 if estado["running"] and arduino is not None and len(alvos) > 0 and not estado["movendo"]:
                     for alvo in alvos:
                         # cria um id unico baseado na posicao grosseira para nao mandar o mesmo alvo duas vezes
@@ -443,9 +443,7 @@ async def main(page: ft.Page):
                             pos_y_passos = (pos_y_real / 10) * 50
                             
                             # monta o comando que o arduino vai entender(i nclui classe para talvez caixas diferentes)
-                            # PEGAR M4 = vai para x,y -> desce servo -> liga rele -> sobe servo -> vai pra caixa M4 -> desliga rele
                             comando = f"MOVE X{int(pos_x_passos)} Y{int(pos_y_passos)}\n"
-                            #PEGAR,m4,x,y
                             # envia o comando pela porta serial (descomente quando for ligar a maquina)
                             arduino.write(comando.encode("utf-8"))
                             print(f"Enviando comando para pegar {alvo['classe']}: {comando.strip()}")
