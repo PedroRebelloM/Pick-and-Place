@@ -107,6 +107,7 @@ void loop() {
     // IMA SOBE
     // IMA LIGA
     // IMA DESLIGA
+    // ESPALHA
 
     if (comando.startsWith("STOP") ) {
       motor_x.stop();
