@@ -50,7 +50,7 @@ class ScrewDetector:
             dadosBase64 = base64.b64encode(buffer).decode("utf-8")
             
             stats_zerado = {
-                "total": 0, "m2": 0, "m3": 0, "m4": 0, "porcas": 0, "outros": 0,
+                "total": 0, "m2": 0, "m3": 0, "m4": 0, "outros": 0,
                 "espessura_media": 0.0,
                 "limite_inf": self.limite_inf,
                 "limite_sup": self.limite_sup   
@@ -99,7 +99,6 @@ class ScrewDetector:
         cv2.circle(frameContornos, (960, 540), 2, (0, 255, 0), 2)  
         cv2.rectangle(frameContornos, (0, 540), (1920, 540), (0, 255, 0), 2)
         dadosParafusos = []
-        dadosPorcas = []
         # analisa e separa cada bloco branco achado na tela
         for i, contorno in enumerate(contornos):
             area = cv2.contourArea(contorno)
@@ -108,8 +107,12 @@ class ScrewDetector:
             if 3500 > area > 500: 
                 x, y, w, h = cv2.boundingRect(contorno)
                 
-                cx = x + (w / 2) #centro em x
-                cy = y + (h / 2) #centro em y
+                # calcula um retangulo justinho que inclina junto com a rotacao do objeto
+                hull = cv2.convexHull(contorno)
+                rect = cv2.minAreaRect(hull)
+                dimensoes = rect[1]
+                
+                cx, cy = rect[0] # usando o centro matematico do retangulo rotacionado
                 
                 # Imprime a cada 100 frames para nao poluir o terminal
                 if self.contador_print >= 100:
@@ -119,36 +122,19 @@ class ScrewDetector:
                 min_zy, max_zy = min(zy1, zy2), max(zy1, zy2)
                 if (min_zx <= cx <= max_zx) and (min_zy <= cy <= max_zy): 
                     continue
-                    
-                # calcula um retangulo justinho que inclina junto com a rotacao do objeto
-                hull = cv2.convexHull(contorno)
-                rect = cv2.minAreaRect(hull)
-                dimensoes = rect[1]
                 
                 comprimento = max(dimensoes)
                 espessura = min(dimensoes)
                 
-                # avalia se o objeto e comprido feito parafuso ou se parece quadrado igual uma porca
-                proporcao = comprimento / espessura
-                is_porca = proporcao < 1.3
-                
-                if is_porca:
-                    if filters.get("porcas", True):
-                        dadosPorcas.append({
-                            'espessura': espessura,
-                            'bbox': (x, y, w, h),
-                            'rect': rect
-                        })
-                else:
-                    if espessura > 6 and filters.get("parafusos", True):
-                        dadosParafusos.append({
-                            'espessura': espessura,
-                            'bbox': (x, y, w, h),
-                            'rect': rect
-                        })
+                if espessura > 6 and filters["parafusos"]:
+                    dadosParafusos.append({
+                        'espessura': espessura,
+                        'bbox': (x, y, w, h),
+                        'rect': rect
+                    })
                     
         # inicializa o contador com zero para montar os dados finais desse momento do video
-        contagem = {"M2": 0, "M3": 0, "M4": 0, "Desc.": 0, "Porcas": len(dadosPorcas)}
+        contagem = {"M2": 0, "M3": 0, "M4": 0, "Desc.": 0}
         espessuras = []
         alvos = []
         
@@ -156,20 +142,6 @@ class ScrewDetector:
         if self.contador_print >= 100:
             self.contador_print = 0
             
-        # encontra o contorno e desenha a marcacao das porcas
-        for p in dadosPorcas:
-            box = cv2.boxPoints(p['rect'])
-            box = np.intp(box)  
-            cv2.drawContours(frameContornos, [box], 0, (255, 0, 0), 2) # pinta as porcas de azul
-            bx, by, bw, bh = p['bbox']
-            
-            # adiciona a porca na lista de alvos validos
-            cx = bx + (bw / 2)
-            cy = by + (bh / 2)
-            alvos.append({"classe": "Porca", "cx": cx, "cy": cy})
-            
-            cv2.putText(frameContornos, "Porca", (bx, by - 10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 0, 0), 3)
 
         # agrupa as espessuras dos parafusos usando inteligencia artificial
         if len(dadosParafusos) >= 1:
@@ -191,14 +163,17 @@ class ScrewDetector:
             
             for idx, p in enumerate(dadosParafusos):
                 clusterAtual = labels[idx]
-                ordemTamanho = np.where(indicesOrdenados == clusterAtual)[0][0]
-                classe = mapaClasses.get(ordemTamanho, "Desc.")
+                
+                # descobre em que posicao (0, 1 ou 2) esse cluster ficou na lista ordenada
+                ordemTamanho = list(indicesOrdenados).index(clusterAtual)
+                
+                classe = mapaClasses[ordemTamanho]
                 
                 # verifica se o filtro do parafuso especifico esta ativo
-                if not filters.get(classe.lower(), True) and classe != "Desc.":
+                if not filters[classe.lower()] and classe != "Desc.":
                     continue
                 
-                contagem[classe] = contagem.get(classe, 0) + 1
+                contagem[classe] += 1
                 espessuras.append(p['espessura'])
                 
                 box = cv2.boxPoints(p['rect'])
@@ -223,11 +198,10 @@ class ScrewDetector:
         dadosBase64 = base64.b64encode(buffer).decode("utf-8")
         avg_e = sum(espessuras) / len(espessuras) if espessuras else 0.0
         stats = {
-            "total": contagem["M2"] + contagem["M3"] + contagem["M4"] + contagem["Desc."] + contagem["Porcas"],
+            "total": contagem["M2"] + contagem["M3"] + contagem["M4"] + contagem["Desc."],
             "m2": contagem["M2"],
             "m3": contagem["M3"],
             "m4": contagem["M4"],
-            "porcas": contagem["Porcas"],
             "outros": contagem["Desc."],
             "espessura_media": avg_e,
             "limite_inf": limiteInf,

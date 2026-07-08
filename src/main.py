@@ -6,7 +6,7 @@ import serial.tools.list_ports
 from classe import ScrewDetector
 
 try:
-    arduino = serial.Serial('COM4', 9600, timeout=1)
+    arduino = serial.Serial('COM9', 9600, timeout=1)
 except Exception as e:
     print(f"Arduino não conectado! Erro detalhado: {e}")
     arduino = None
@@ -61,9 +61,6 @@ async def main(page: ft.Page):
             statusText.value = "Sistema operando"
             statusText.color = ft.Colors.GREEN_400
             statusText.update()
-            
-            #if arduino is not None:
-              #  arduino.write("COMEÇAR\n".encode("utf-8"))
 
     def btn_descer_click(e):
         if arduino is not None:
@@ -123,14 +120,23 @@ async def main(page: ft.Page):
 
     def btn_restaurar_padroes(e):
         detector.restaurar_padroes()
+        input_h_min.value = str(detector.default_limite_inf[0])
+        input_s_min.value = str(detector.default_limite_inf[1])
+        input_v_min.value = str(detector.default_limite_inf[2])
+        input_h_max.value = str(detector.default_limite_sup[0])
+        input_s_max.value = str(detector.default_limite_sup[1])
+        input_v_max.value = str(detector.default_limite_sup[2])
+        
         statusText.value = "Padrões Restaurados"
         statusText.color = ft.Colors.BLUE_400
         statusText.update()
+        page.update()
 
     def btn_espalhar_click(e):
         if arduino is not None:
             # Envia o comando "ESPALHA" pela porta serial
             arduino.write("ESPALHA\n".encode("utf-8"))
+            print("Enviado: ESPALHA")
             estado["movendo"] = True
             # Como a máquina vai demorar, você pode opcionalmente criar um estado novo "espalhando" ou só usar "livre"
             estado["fase_movimento"] = "espalhando"
@@ -173,13 +179,12 @@ async def main(page: ft.Page):
     count_m2_text = ft.Text("M2: 0", size=18, color=ft.Colors.GREEN_400, weight=ft.FontWeight.W_500)
     count_m3_text = ft.Text("M3: 0", size=18, color=ft.Colors.BLUE_400, weight=ft.FontWeight.W_500)
     count_m4_text = ft.Text("M4: 0", size=18, color=ft.Colors.PURPLE_400, weight=ft.FontWeight.W_500)
-    count_porcas_text = ft.Text("Porcas: 0", size=18, color=ft.Colors.CYAN_400, weight=ft.FontWeight.W_500)
     count_desc_text = ft.Text("Outros: 0", size=18, color=ft.Colors.GREY_400, weight=ft.FontWeight.W_500)
     total_text = ft.Text("Total: 0", size=22, weight=ft.FontWeight.BOLD)
 
     # agrupa os textos em linhas para poupar espaco vertical
     parafusos_row = ft.Row([count_m2_text, count_m3_text, count_m4_text], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
-    outros_row = ft.Row([count_porcas_text, count_desc_text], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+    outros_row = ft.Row([count_desc_text], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
     # constroi as caixas de selecao de filtros
     chk_m2 = ft.Checkbox(label="M2", value=True)
     chk_m3 = ft.Checkbox(label="M3", value=True)
@@ -193,11 +198,9 @@ async def main(page: ft.Page):
         page.update()
         
     chk_parafusos = ft.Checkbox(label="Parafusos", value=True, on_change=on_parafusos_change)
-    chk_porcas = ft.Checkbox(label="Porcas", value=True)
     filtros_container = ft.Container(
         content=ft.Column([
             ft.Text("Filtros de Detecção", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-            chk_porcas,
             chk_parafusos,
             ft.Row([chk_m2, chk_m3, chk_m4], alignment=ft.MainAxisAlignment.START)
         ], spacing=2)
@@ -212,10 +215,30 @@ async def main(page: ft.Page):
     input_zy2 = ft.TextField(label="Y2", value="1080", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER, on_change=update_zm)
     
     zona_morta_container = ft.Container(
-        content=ft.Row([
-            ft.Text("Configurar Zona Morta (Limites do Retângulo):", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE, size=16),
-            input_zx1, input_zy1, input_zx2, input_zy2
-        ], alignment=ft.MainAxisAlignment.START, spacing=15),
+        content=ft.Column([
+            ft.Text("Configurar Zona Morta:", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE, size=16),
+            ft.Row([input_zx1, input_zy1], spacing=10),
+            ft.Row([input_zx2, input_zy2], spacing=10)
+        ], spacing=10),
+        padding=15,
+        bgcolor=ft.Colors.SURFACE_CONTAINER_HIGHEST,
+        border_radius=12,
+    )
+    
+    # controles HSV
+    input_h_min = ft.TextField(label="H Min", value="0", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+    input_s_min = ft.TextField(label="S Min", value="0", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+    input_v_min = ft.TextField(label="V Min", value="110", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+    input_h_max = ft.TextField(label="H Max", value="180", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+    input_s_max = ft.TextField(label="S Max", value="255", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+    input_v_max = ft.TextField(label="V Max", value="255", width=65, height=40, text_size=12, keyboard_type=ft.KeyboardType.NUMBER)
+
+    hsv_container = ft.Container(
+        content=ft.Column([
+            ft.Text("Limites HSV de Cores:", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE, size=16),
+            ft.Row([input_h_min, input_s_min, input_v_min], spacing=10),
+            ft.Row([input_h_max, input_s_max, input_v_max], spacing=10)
+        ], spacing=10),
         padding=15,
         bgcolor=ft.Colors.SURFACE_CONTAINER_HIGHEST,
         border_radius=12,
@@ -258,9 +281,11 @@ async def main(page: ft.Page):
                             bgcolor=ft.Colors.BLACK,
                             border_radius=12,
                         ),
-                        elevation=8,
                     ),
-                    zona_morta_container
+                    ft.Row([
+                        ft.Container(content=zona_morta_container, expand=True),
+                        ft.Container(content=hsv_container, expand=True)
+                    ], spacing=15, alignment=ft.MainAxisAlignment.START)
                 ], expand=True, spacing=15),
                 info_panel
             ],
@@ -275,7 +300,6 @@ async def main(page: ft.Page):
         )
     )
 
-    # parametros de calibracao da cnc (mapeamento camera -> real)
     #24.3 altura
     offset_x_mm = 10
     offset_y_mm = 50
@@ -289,7 +313,6 @@ async def main(page: ft.Page):
                 # le os filtros escolhidos na interface
                 filtros_atuais = {
                     "parafusos": chk_parafusos.value,
-                    "porcas": chk_porcas.value,
                     "m2": chk_m2.value,
                     "m3": chk_m3.value,
                     "m4": chk_m4.value
@@ -303,6 +326,20 @@ async def main(page: ft.Page):
                     pass # mantem a zona morta valida anterior
 
                 zm = estado["zm_atual"]
+                
+                # tenta ler e aplicar limites HSV customizados em tempo real
+                try:
+                    h_min = int(input_h_min.value)
+                    s_min = int(input_s_min.value)
+                    v_min = int(input_v_min.value)
+                    h_max = int(input_h_max.value)
+                    s_max = int(input_s_max.value)
+                    v_max = int(input_v_max.value)
+                    detector.limite_inf = (h_min, s_min, v_min)
+                    detector.limite_sup = (h_max, s_max, v_max)
+                except:
+                    pass
+                
             
                 # processamento da imagem ao vivo da camera
                 deve_detectar = not estado["movendo"] and time.time() > estado["ignorar_ate"]
@@ -344,10 +381,6 @@ async def main(page: ft.Page):
                     count_m4_text.value = new_m4
                     count_m4_text.update()
 
-                new_porcas = f"Porcas: {stats['porcas']}"
-                if count_porcas_text.value != new_porcas:
-                    count_porcas_text.value = new_porcas
-                    count_porcas_text.update()
 
                 new_desc = f"Outros: {stats['outros']}"
                 if count_desc_text.value != new_desc:
@@ -359,7 +392,7 @@ async def main(page: ft.Page):
                     total_text.value = new_total
                     total_text.update()
 
-                # verifica se o Arduino enviou alguma mensagem
+                # verifica se o arduino enviou alguma mensagem
                 if arduino is not None and arduino.in_waiting > 0:
                     try:
                         dados_lidos = arduino.read(arduino.in_waiting).decode("utf-8").strip()
@@ -399,13 +432,13 @@ async def main(page: ft.Page):
                             elif linha == "SUBI":
                                 if fase == "subindo_pegar": #subindo com o parafuso
                                     estado["magnetizado"] = True
-                                    classe = estado.get("alvo_atual_classe", "Desc.")
+                                    classe = estado["alvo_atual_classe"]
                                     if classe == "M2":
                                         arduino.write("MOVE X150 Y400\n".encode("utf-8"))
                                     elif classe == "M3":
                                         arduino.write("MOVE X150 Y800\n".encode("utf-8"))
                                     elif classe == "M4":
-                                        arduino.write("MOVE X150 Y1020\n".encode("utf-8"))
+                                        arduino.write("MOVE X150 Y1200\n".encode("utf-8"))
                                     else:
                                         arduino.write("MOVE X150 Y400\n".encode("utf-8"))
                                     estado["fase_movimento"] = "indo_caixa"
