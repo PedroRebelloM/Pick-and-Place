@@ -11,12 +11,6 @@
 void espalha_parafusos(int velo_esp, int acel_esp) {
 
   //Serial.println("Iniciando espalhamento de parafusos...");
-  if (velo_esp == 0){
-    velo_esp = 500;
-  }
-  if (acel_esp == 0){
-    acel_esp = 300;
-  }
 
   // Desativa o ima
   digitalWrite(RELE_IMA, HIGH);
