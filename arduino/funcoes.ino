@@ -105,6 +105,11 @@ void homing () {
   // Habilita os drivers dos motores 
   digitalWrite(EN_PIN, LOW);
 
+  for (int angulo = 180; angulo >= SERVO_POS_INI; angulo--) {
+    motor_ima.write(angulo);
+    delay(15);
+  }
+
   // EIXO X
   //Serial.println("Voltando para o início do Eixo X");
   motor_x.setSpeed(velo_homing); 
@@ -146,11 +151,6 @@ void homing () {
     }
   }
   */
-
-  for (int angulo = 180; angulo >= SERVO_POS_INI; angulo--) {
-    motor_ima.write(angulo);
-    delay(15);
-  }
 
   Serial.println("PAROU");
   // Desliga a alimentação dos motores

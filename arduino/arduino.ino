@@ -13,9 +13,6 @@
 #define MOTOR_Y_STEP 3
 #define MOTOR_Y_DIR 6
 
-//#define MOTOR_Z_STEP 4
-//#define MOTOR_Z_DIR 7
-
 #define INICIO_CURSO_X 9
 #define INICIO_CURSO_Y 11
 
@@ -23,9 +20,6 @@
 #define MOTOR_IMA 13
 
 #define SERVO_POS_INI 0
-
-//#define MOTOR_A_STEP 12
-//#define MOTOR_A_DIR 13
 
 // Pino da fita de LED
 #define PIN_LED 7 
@@ -42,12 +36,12 @@ int POS_Y = 0;
 int JANELA_X = 1150;
 int JANELA_Y = 1200;
 
-float velocidade = 150;
-float aceleracao = 100;
+float velocidade = 400;
+float aceleracao = 300;
 
 bool em_movimento = false;
 
-float velo_homing = -300;
+float velo_homing = -400;
 
 unsigned long contagem_tempo = 0;
 
@@ -63,6 +57,7 @@ void setup() {
   // Habilita os drivers dos motores
   // ATENÇÃO: Se definir no código, não colocar jumper na placa
   pinMode(EN_PIN, OUTPUT);
+  // Desabilita os drivers dos motores
   digitalWrite(EN_PIN, HIGH);
 
   // HIGH -> Chave aberta
