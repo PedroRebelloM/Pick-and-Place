@@ -119,7 +119,9 @@ Pick-and-Place/
 - **Pedro Rebello M**
 - **Pedro Ribeiro**
 
-## 📞 Suporte e Contato
+## 📸 Video
+
+- https://youtu.be/jzBIY5suvXo
 
 ---
 
